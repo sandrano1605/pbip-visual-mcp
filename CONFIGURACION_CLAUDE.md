@@ -103,6 +103,20 @@ Parametros recomendados:
 - `templatePbipPath`: enviar ruta explicita cuando la plantilla no esté en la ruta por defecto.
 - `canvasPreset`: usar `operativo` como estándar para lienzos de trabajo diario.
 
+## Academia recomendada (fuentes oficiales)
+
+- Documentacion general:
+  - https://learn.microsoft.com/es-es/power-bi/
+- Diseno de paneles:
+  - https://learn.microsoft.com/es-es/power-bi/create-reports/service-dashboards-design-tips
+- UX efectiva para mostrar detalle:
+  - https://learn.microsoft.com/es-es/training/modules/power-bi-effective-user-experience/1a-design-reports-show-details
+
+Resumen aplicado al MCP:
+- 1 pregunta de negocio por visual principal.
+- jerarquia visual (arriba resumen, abajo detalle).
+- coherencia de formato (CLP/fechas) y no saturar el lienzo base.
+
 ```json
 { "pbipPath": "C:\\Users\\alonso.moya\\OneDrive - ARTEL S.A\\Escritorio\\Analisis con python\\monitor_personal\\productividad_por_complejidad.pbip", "tableName": "FACT_TAREAS_USUARIO_STG" }
 ```

@@ -40,6 +40,8 @@ Regla adicional obligatoria:
    - carga sin error,
    - tema y logo aplicados,
    - visuales con layout esperado.
+6. Validar checklist de academia Microsoft:
+   - `ACADEMIA_MICROSOFT_PBI_MEJORES_PRACTICAS.md`
 
 ## Causas comunes de falla y prevencion
 
@@ -57,3 +59,4 @@ Cada cambio de MCP debe actualizar:
 1. `README.md` (capacidad y ejemplo de uso).
 2. `CONFIGURACION_CLAUDE.md` (ejemplos operativos reales).
 3. `MCP_INCIDENTES_Y_FIXES.md` (si hubo falla y correccion).
+4. `ACADEMIA_MICROSOFT_PBI_MEJORES_PRACTICAS.md` cuando se cambie estandar visual.

@@ -81,3 +81,5 @@ npm run build
 Documentación operativa extendida:
 
 - `CONFIGURACION_CLAUDE.md`
+- `OPERACION_Y_MEJORES_PRACTICAS.md`
+- `ACADEMIA_MICROSOFT_PBI_MEJORES_PRACTICAS.md`
