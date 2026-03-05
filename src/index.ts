@@ -49,7 +49,8 @@ const CreateProfessionalCanvasSchema = z.object({
   preferTable: z.string().optional(),
   replaceExistingVisuals: z.boolean().optional(),
   applyTemplateStyle: z.boolean().optional(),
-  templatePbipPath: z.string().optional()
+  templatePbipPath: z.string().optional(),
+  canvasPreset: z.enum(['operativo', 'ejecutivo']).optional()
 });
 
 type ReportDocument = {
@@ -623,13 +624,13 @@ function copyFileIfExists(src: string, dest: string) {
   return true;
 }
 
-function buildTemplateDecorativeVisuals(logoFileName: string) {
+function buildTemplateDecorativeVisuals(logoFileName: string, pageHeight: number, sidebarWidth: number) {
   const sidebarCfg = {
     name: 'v_sidebar_template',
     layouts: [
       {
         id: 0,
-        position: { x: 0, y: 0, z: 100, width: 256, height: 900, tabOrder: 10 }
+        position: { x: 0, y: 0, z: 100, width: sidebarWidth, height: pageHeight, tabOrder: 10 }
       }
     ],
     singleVisual: {
@@ -661,7 +662,7 @@ function buildTemplateDecorativeVisuals(logoFileName: string) {
     layouts: [
       {
         id: 0,
-        position: { x: 16, y: 24, z: 300, width: 224, height: 96, tabOrder: 20 }
+        position: { x: 16, y: 24, z: 300, width: Math.max(180, sidebarWidth - 32), height: 96, tabOrder: 20 }
       }
     ],
     singleVisual: {
@@ -693,7 +694,7 @@ function buildTemplateDecorativeVisuals(logoFileName: string) {
     layouts: [
       {
         id: 0,
-        position: { x: 24, y: 140, z: 301, width: 220, height: 60, tabOrder: 30 }
+        position: { x: 24, y: 140, z: 301, width: Math.max(160, sidebarWidth - 36), height: 60, tabOrder: 30 }
       }
     ],
     singleVisual: {
@@ -1282,6 +1283,8 @@ class PbipVisualMcpServer {
     const input = CreateProfessionalCanvasSchema.parse(args);
     const replaceExistingVisuals = input.replaceExistingVisuals ?? true;
     const applyTemplateStyle = input.applyTemplateStyle ?? true;
+    const canvasPreset = input.canvasPreset ?? 'operativo';
+    const isOperationalPreset = canvasPreset === 'operativo';
 
     const { report, reportDir, reportJsonPath } = loadPbip(input.pbipPath);
     const { tablesDir } = loadSemanticModel(input.pbipPath);
@@ -1356,17 +1359,18 @@ class PbipVisualMcpServer {
 
     const alias = 't';
     const margin = 20;
-    const pageWidth = applyTemplateStyle ? 1400 : 1280;
-    const pageHeight = applyTemplateStyle ? 900 : 720;
-    const contentX = applyTemplateStyle ? 272 : margin;
+    const pageWidth = applyTemplateStyle ? (isOperationalPreset ? 1600 : 1400) : 1280;
+    const pageHeight = applyTemplateStyle ? (isOperationalPreset ? 1000 : 900) : 720;
+    const sidebarWidth = applyTemplateStyle ? (isOperationalPreset ? 280 : 256) : 0;
+    const contentX = applyTemplateStyle ? sidebarWidth + 20 : margin;
     const contentW = pageWidth - contentX - margin;
     const topRowY = applyTemplateStyle ? 80 : margin;
-    const topRowHeight = applyTemplateStyle ? 260 : 300;
+    const topRowHeight = applyTemplateStyle ? (isOperationalPreset ? 300 : 260) : 300;
     const topGap = applyTemplateStyle ? 20 : margin;
     const leftW = Math.floor((contentW - topGap) / 2);
     const rightW = contentW - topGap - leftW;
-    const tableY = applyTemplateStyle ? 360 : margin * 2 + topRowHeight;
-    const tableHeight = applyTemplateStyle ? 500 : pageHeight - (margin * 3 + topRowHeight);
+    const tableY = applyTemplateStyle ? (isOperationalPreset ? 420 : 360) : margin * 2 + topRowHeight;
+    const tableHeight = applyTemplateStyle ? (isOperationalPreset ? 540 : 500) : pageHeight - (margin * 3 + topRowHeight);
 
     let section: any;
     if (!report.sections || report.sections.length === 0) {
@@ -1556,7 +1560,7 @@ class PbipVisualMcpServer {
         ];
       }
 
-      const decorativeVisuals = buildTemplateDecorativeVisuals(copiedLogoFileName).map((cfg, idx) => ({
+      const decorativeVisuals = buildTemplateDecorativeVisuals(copiedLogoFileName, pageHeight, sidebarWidth).map((cfg, idx) => ({
         config: JSON.stringify(cfg),
         filters: '[]',
         x: cfg.layouts[0].position.x,
@@ -1568,10 +1572,10 @@ class PbipVisualMcpServer {
 
       const subtitleVisual = buildVisualContainer({
         name: 'v_subtitle_template',
-        x: 272,
+        x: contentX,
         y: 16,
         z: 302,
-        width: pageWidth - 292,
+        width: contentW,
         height: 48,
         singleVisual: {
           visualType: 'textbox',
@@ -1630,6 +1634,7 @@ class PbipVisualMcpServer {
         visualsAdded: 3,
         replaceExistingVisuals,
         applyTemplateStyle,
+        canvasPreset,
         sectionSizing
       }
     };

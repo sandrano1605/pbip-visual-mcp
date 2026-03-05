@@ -20,6 +20,9 @@ Regla adicional obligatoria:
 
 - Validar tamaño de lienzo antes de cerrar el cambio.  
   El servidor ahora ejecuta auto-ajuste de `section.width/section.height` para que todos los visuales queden dentro del canvas.
+- Estándar de preset:
+  - `operativo` = `1600x1000` (default)
+  - `ejecutivo` = `1400x900`
 
 ## Checklist primera vez (end-to-end)
 

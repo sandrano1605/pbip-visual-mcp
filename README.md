@@ -46,6 +46,7 @@ Ejemplo de llamada recomendada para crear lienzo:
   "sectionDisplayName": "01_Base_Profesional",
   "replaceExistingVisuals": true,
   "applyTemplateStyle": true,
+  "canvasPreset": "operativo",
   "templatePbipPath": "C:\\ruta\\canvas-plantilla\\plantilla_canvas.pbip"
 }
 ```
@@ -59,6 +60,9 @@ Parámetros nuevos de `pbip_create_professional_canvas`:
 - `applyTemplateStyle` (boolean, opcional, default `true`): aplica estilo visual tipo plantilla.
 - `templatePbipPath` (string, opcional): ruta al `.pbip` plantilla.  
   Si no se envía, se intenta resolver automáticamente: `<carpeta-del-pbip>/canvas-plantilla/plantilla_canvas.pbip`.
+- `canvasPreset` (string, opcional): `operativo` o `ejecutivo`.
+  - `operativo` (default): `1600x1000`
+  - `ejecutivo`: `1400x900`
 
 ## Flujo recomendado (primera vez)
 
