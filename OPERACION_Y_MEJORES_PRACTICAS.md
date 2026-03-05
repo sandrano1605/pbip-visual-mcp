@@ -16,6 +16,11 @@ Antes de cada cambio de lienzo:
 4. Abrir PBIP en Power BI Desktop.
 5. Registrar incidente/fix si falla.
 
+Regla adicional obligatoria:
+
+- Validar tamaño de lienzo antes de cerrar el cambio.  
+  El servidor ahora ejecuta auto-ajuste de `section.width/section.height` para que todos los visuales queden dentro del canvas.
+
 ## Checklist primera vez (end-to-end)
 
 1. Compilar MCP:
@@ -49,4 +54,3 @@ Cada cambio de MCP debe actualizar:
 1. `README.md` (capacidad y ejemplo de uso).
 2. `CONFIGURACION_CLAUDE.md` (ejemplos operativos reales).
 3. `MCP_INCIDENTES_Y_FIXES.md` (si hubo falla y correccion).
-

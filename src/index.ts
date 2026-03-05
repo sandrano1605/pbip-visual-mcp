@@ -567,6 +567,33 @@ function buildVisualContainer(args: {
   };
 }
 
+function ensureSectionFitsVisuals(section: any, padding = 20) {
+  const visuals = section.visualContainers || [];
+  let maxRight = 0;
+  let maxBottom = 0;
+  for (const v of visuals) {
+    const right = (typeof v.x === 'number' ? v.x : 0) + (typeof v.width === 'number' ? v.width : 0);
+    const bottom = (typeof v.y === 'number' ? v.y : 0) + (typeof v.height === 'number' ? v.height : 0);
+    if (right > maxRight) maxRight = right;
+    if (bottom > maxBottom) maxBottom = bottom;
+  }
+
+  const currentW = typeof section.width === 'number' ? section.width : 1280;
+  const currentH = typeof section.height === 'number' ? section.height : 720;
+  const requiredW = Math.ceil(maxRight + padding);
+  const requiredH = Math.ceil(maxBottom + padding);
+
+  section.width = Math.max(currentW, requiredW);
+  section.height = Math.max(currentH, requiredH);
+
+  return {
+    width: section.width,
+    height: section.height,
+    requiredWidth: requiredW,
+    requiredHeight: requiredH
+  };
+}
+
 function parseReportConfigConfig(report: any) {
   const raw = report?.config;
   if (!raw || typeof raw !== 'string') {
@@ -1579,6 +1606,7 @@ class PbipVisualMcpServer {
 
     const existing = section.visualContainers || [];
     section.visualContainers = existing.concat([chart1, chart2, tableVisual]);
+    const sectionSizing = ensureSectionFitsVisuals(section, 12);
     saveReport(reportJsonPath, report);
 
     return {
@@ -1601,7 +1629,8 @@ class PbipVisualMcpServer {
         },
         visualsAdded: 3,
         replaceExistingVisuals,
-        applyTemplateStyle
+        applyTemplateStyle,
+        sectionSizing
       }
     };
   }
