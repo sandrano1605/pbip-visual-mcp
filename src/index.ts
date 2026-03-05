@@ -85,13 +85,14 @@ const ListLocalInstancesSchema = z.object({
   rootPath: z.string().optional()
 });
 
-const ExecuteQuerySchema = z
-  .object({
-    port: z.number().optional(),
-    connectionString: z.string().optional(),
-    query: z.string().min(1),
-    maxRows: z.number().int().positive().optional()
-  })
+const ExecuteQueryInputSchema = z.object({
+  port: z.number().optional(),
+  connectionString: z.string().optional(),
+  query: z.string().min(1),
+  maxRows: z.number().int().positive().optional()
+});
+
+const ExecuteQuerySchema = ExecuteQueryInputSchema
   .refine((val) => !!val.port || !!val.connectionString, {
     message: 'Debe indicar port o connectionString'
   });
@@ -710,7 +711,7 @@ class PbipVisualMcpServer {
         description: 'Ejecuta una consulta DAX o DMV en el modelo local (Analysis Services)',
         inputSchema: {
           type: 'object',
-          properties: ExecuteQuerySchema.shape,
+          properties: ExecuteQueryInputSchema.shape,
           required: ['query']
         }
       },
