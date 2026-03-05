@@ -35,6 +35,9 @@ Agrega este bloque a `claude_desktop_config.json`:
 
 5) Crear lienzo profesional base (recomendado)
    -> pbip_create_professional_canvas { "pbipPath": "...\\productividad_por_complejidad.pbip", "sectionDisplayName": "01_Base_Profesional", "replaceExistingVisuals": true }
+
+6) Crear lienzo profesional con plantilla corporativa (recomendado en productivo)
+   -> pbip_create_professional_canvas { "pbipPath": "...\\analisis_disponibilidad.pbip", "sectionDisplayName": "01_Base_Disponibilidad", "replaceExistingVisuals": true, "applyTemplateStyle": true, "templatePbipPath": "...\\canvas-plantilla\\plantilla_canvas.pbip" }
 ```
 ## Nuevas herramientas (TMDL)
 
@@ -45,6 +48,9 @@ Agrega este bloque a `claude_desktop_config.json`:
 - `pbip_get_table_details`: columnas y medidas con metadatos para una tabla
 - `pbip_get_model_overview`: resumen de conteos de tablas/columnas/medidas/relaciones
 - `pbip_create_professional_canvas`: crea automaticamente un lienzo base profesional (2 graficos + 1 tabla) con seleccion inteligente de tabla/campos
+  - Incluye opciones de plantilla:
+    - `applyTemplateStyle` (default `true`): aplica tema/logo/sidebar/header desde plantilla.
+    - `templatePbipPath` (opcional): si no se envia, intenta `canvas-plantilla/plantilla_canvas.pbip` relativo al PBIP objetivo.
 
 ## Nuevas herramientas (PBIX abierto)
 
@@ -78,6 +84,11 @@ La herramienta `pbip_create_professional_canvas` aplica este estandar por defect
    - Grafico 2 (arriba derecha)
    - Tabla detalle (franja inferior)
 4. Si `replaceExistingVisuals=true`, limpia los visuales existentes antes de crear la base.
+5. Si `applyTemplateStyle=true`, aplica:
+   - pagina 1400x900,
+   - panel lateral corporativo,
+   - logo en `RegisteredResources`,
+   - tema base copiado desde plantilla.
 
 Parametros recomendados:
 
@@ -85,6 +96,8 @@ Parametros recomendados:
 - `sectionDisplayName`: recomendado para estandarizar nombres de pagina.
 - `replaceExistingVisuals`: recomendado `true` para reconstruccion limpia.
 - `preferTable`: usar solo cuando quieras forzar una tabla especifica.
+- `applyTemplateStyle`: mantener `true` salvo pruebas técnicas.
+- `templatePbipPath`: enviar ruta explicita cuando la plantilla no esté en la ruta por defecto.
 
 ```json
 { "pbipPath": "C:\\Users\\alonso.moya\\OneDrive - ARTEL S.A\\Escritorio\\Analisis con python\\monitor_personal\\productividad_por_complejidad.pbip", "tableName": "FACT_TAREAS_USUARIO_STG" }

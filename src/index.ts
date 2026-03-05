@@ -47,10 +47,14 @@ const CreateProfessionalCanvasSchema = z.object({
   sectionName: z.string().optional(),
   sectionDisplayName: z.string().optional(),
   preferTable: z.string().optional(),
-  replaceExistingVisuals: z.boolean().optional()
+  replaceExistingVisuals: z.boolean().optional(),
+  applyTemplateStyle: z.boolean().optional(),
+  templatePbipPath: z.string().optional()
 });
 
 type ReportDocument = {
+  config?: string;
+  resourcePackages?: any[];
   sections: any[];
 };
 
@@ -561,6 +565,135 @@ function buildVisualContainer(args: {
     y: args.y,
     z: args.z
   };
+}
+
+function parseReportConfigConfig(report: any) {
+  const raw = report?.config;
+  if (!raw || typeof raw !== 'string') {
+    return {};
+  }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
+function setReportConfig(report: any, cfg: any) {
+  report.config = JSON.stringify(cfg);
+}
+
+function ensureDir(dirPath: string) {
+  fs.mkdirSync(dirPath, { recursive: true });
+}
+
+function copyFileIfExists(src: string, dest: string) {
+  if (!fs.existsSync(src)) {
+    return false;
+  }
+  ensureDir(path.dirname(dest));
+  fs.copyFileSync(src, dest);
+  return true;
+}
+
+function buildTemplateDecorativeVisuals(logoFileName: string) {
+  const sidebarCfg = {
+    name: 'v_sidebar_template',
+    layouts: [
+      {
+        id: 0,
+        position: { x: 0, y: 0, z: 100, width: 256, height: 900, tabOrder: 10 }
+      }
+    ],
+    singleVisual: {
+      visualType: 'shape',
+      drillFilterOtherVisuals: true,
+      objects: {
+        shape: [{ properties: { tileShape: { expr: { Literal: { Value: "'rectangle'" } } }, roundEdge: { expr: { Literal: { Value: '16L' } } } } }],
+        rotation: [{ properties: { shapeAngle: { expr: { Literal: { Value: '0L' } } } } }],
+        fill: [
+          {
+            properties: {
+              fillColor: { solid: { color: { expr: { Literal: { Value: "'#FFB310'" } } } } },
+              transparency: { expr: { Literal: { Value: '22D' } } }
+            },
+            selector: { id: 'default' }
+          }
+        ],
+        shadow: [
+          { properties: { show: { expr: { Literal: { Value: 'true' } } } } },
+          { properties: { transparency: { expr: { Literal: { Value: '14D' } } } }, selector: { id: 'default' } }
+        ]
+      }
+    },
+    howCreated: 'InsertVisualButton'
+  };
+
+  const logoCfg = {
+    name: 'v_logo_template',
+    layouts: [
+      {
+        id: 0,
+        position: { x: 16, y: 24, z: 300, width: 224, height: 96, tabOrder: 20 }
+      }
+    ],
+    singleVisual: {
+      visualType: 'image',
+      drillFilterOtherVisuals: true,
+      objects: {
+        general: [
+          {
+            properties: {
+              imageUrl: {
+                expr: {
+                  ResourcePackageItem: {
+                    PackageName: 'RegisteredResources',
+                    PackageType: 1,
+                    ItemName: logoFileName
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    howCreated: 'InsertVisualButton'
+  };
+
+  const titleCfg = {
+    name: 'v_title_template',
+    layouts: [
+      {
+        id: 0,
+        position: { x: 24, y: 140, z: 301, width: 220, height: 60, tabOrder: 30 }
+      }
+    ],
+    singleVisual: {
+      visualType: 'textbox',
+      drillFilterOtherVisuals: true,
+      objects: {
+        general: [
+          {
+            properties: {
+              paragraphs: [
+                {
+                  textRuns: [
+                    {
+                      value: 'DISPONIBILIDAD NL',
+                      textStyle: { fontWeight: 'bold', fontSize: '16pt', color: '#094780' }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  };
+
+  return [sidebarCfg, logoCfg, titleCfg];
 }
 
 class PbipVisualMcpServer {
@@ -1121,8 +1254,9 @@ class PbipVisualMcpServer {
   private async handleCreateProfessionalCanvas(args: any) {
     const input = CreateProfessionalCanvasSchema.parse(args);
     const replaceExistingVisuals = input.replaceExistingVisuals ?? true;
+    const applyTemplateStyle = input.applyTemplateStyle ?? true;
 
-    const { report, reportJsonPath } = loadPbip(input.pbipPath);
+    const { report, reportDir, reportJsonPath } = loadPbip(input.pbipPath);
     const { tablesDir } = loadSemanticModel(input.pbipPath);
 
     const files = fs.readdirSync(tablesDir).filter((f) => f.toLowerCase().endsWith('.tmdl'));
@@ -1194,11 +1328,18 @@ class PbipVisualMcpServer {
     }
 
     const alias = 't';
-    const topRowHeight = 300;
     const margin = 20;
-    const pageWidth = 1280;
-    const leftW = Math.floor((pageWidth - margin * 3) / 2);
-    const rightW = pageWidth - margin * 3 - leftW;
+    const pageWidth = applyTemplateStyle ? 1400 : 1280;
+    const pageHeight = applyTemplateStyle ? 900 : 720;
+    const contentX = applyTemplateStyle ? 272 : margin;
+    const contentW = pageWidth - contentX - margin;
+    const topRowY = applyTemplateStyle ? 80 : margin;
+    const topRowHeight = applyTemplateStyle ? 260 : 300;
+    const topGap = applyTemplateStyle ? 20 : margin;
+    const leftW = Math.floor((contentW - topGap) / 2);
+    const rightW = contentW - topGap - leftW;
+    const tableY = applyTemplateStyle ? 360 : margin * 2 + topRowHeight;
+    const tableHeight = applyTemplateStyle ? 500 : pageHeight - (margin * 3 + topRowHeight);
 
     let section: any;
     if (!report.sections || report.sections.length === 0) {
@@ -1207,15 +1348,18 @@ class PbipVisualMcpServer {
         displayName: input.sectionDisplayName ?? '01_Base_Profesional',
         displayOption: 1,
         filters: '[]',
-        height: 720.0,
+        height: pageHeight,
         name: generateVisualName(),
         visualContainers: [],
-        width: 1280.0
+        width: pageWidth
       };
       report.sections = [section];
     } else {
       section = findSection(report, input.sectionName);
     }
+
+    section.width = pageWidth;
+    section.height = pageHeight;
 
     if (input.sectionDisplayName) {
       section.displayName = input.sectionDisplayName;
@@ -1233,8 +1377,8 @@ class PbipVisualMcpServer {
     const chart1Val = buildSumSelect(alias, selectedTable.tableName, value1.name);
     const chart1 = buildVisualContainer({
       name: generateVisualName(),
-      x: margin,
-      y: margin,
+      x: contentX,
+      y: topRowY,
       z: zBase,
       width: leftW,
       height: topRowHeight,
@@ -1257,8 +1401,8 @@ class PbipVisualMcpServer {
     const chart2Val = buildSumSelect(alias, selectedTable.tableName, value2.name);
     const chart2 = buildVisualContainer({
       name: generateVisualName(),
-      x: margin * 2 + leftW,
-      y: margin,
+      x: contentX + leftW + topGap,
+      y: topRowY,
       z: zBase + 1,
       width: rightW,
       height: topRowHeight,
@@ -1304,11 +1448,11 @@ class PbipVisualMcpServer {
 
     const tableVisual = buildVisualContainer({
       name: generateVisualName(),
-      x: margin,
-      y: margin * 2 + topRowHeight,
+      x: contentX,
+      y: tableY,
       z: zBase + 2,
-      width: pageWidth - margin * 2,
-      height: 720 - (margin * 3 + topRowHeight),
+      width: contentW,
+      height: tableHeight,
       singleVisual: {
         visualType: 'tableEx',
         projections: { Values: tableValueRefs },
@@ -1320,6 +1464,118 @@ class PbipVisualMcpServer {
         drillFilterOtherVisuals: true
       }
     });
+
+    if (applyTemplateStyle) {
+      const pbipDir = path.dirname(path.resolve(input.pbipPath));
+      const defaultTemplatePbipPath = path.resolve(pbipDir, 'canvas-plantilla', 'plantilla_canvas.pbip');
+      const templatePbipPath = input.templatePbipPath || defaultTemplatePbipPath;
+
+      let copiedThemeName: string | null = null;
+      let copiedThemeVersion = '5.51';
+      let copiedLogoFileName = 'logo-artel9631238808714528.png';
+
+      if (fs.existsSync(templatePbipPath)) {
+        const { report: templateReport, reportDir: templateReportDir } = loadPbip(templatePbipPath);
+        const tCfg = parseReportConfigConfig(templateReport);
+        const tBaseTheme = tCfg?.themeCollection?.baseTheme;
+        const themeName = tBaseTheme?.name;
+        if (typeof themeName === 'string' && themeName.length > 0) {
+          const srcThemePath = path.join(templateReportDir, 'StaticResources', 'SharedResources', 'BaseThemes', `${themeName}.json`);
+          const dstThemePath = path.join(reportDir, 'StaticResources', 'SharedResources', 'BaseThemes', `${themeName}.json`);
+          if (copyFileIfExists(srcThemePath, dstThemePath)) {
+            copiedThemeName = themeName;
+            if (typeof tBaseTheme?.version === 'string' && tBaseTheme.version.length > 0) {
+              copiedThemeVersion = tBaseTheme.version;
+            }
+          }
+        }
+
+        const registeredPkg = (templateReport.resourcePackages || []).find(
+          (p: any) => p?.resourcePackage?.name === 'RegisteredResources'
+        );
+        const registeredItem = registeredPkg?.resourcePackage?.items?.find((it: any) => it?.type === 100);
+        if (registeredItem?.name && registeredItem?.path) {
+          const srcLogoPath = path.join(templateReportDir, 'StaticResources', 'RegisteredResources', registeredItem.path);
+          const dstLogoPath = path.join(reportDir, 'StaticResources', 'RegisteredResources', registeredItem.name);
+          if (copyFileIfExists(srcLogoPath, dstLogoPath)) {
+            copiedLogoFileName = registeredItem.name;
+          }
+        }
+      }
+
+      if (copiedThemeName) {
+        const rCfg = parseReportConfigConfig(report);
+        if (!rCfg.themeCollection) rCfg.themeCollection = {};
+        rCfg.themeCollection.baseTheme = { name: copiedThemeName, type: 2, version: copiedThemeVersion };
+        setReportConfig(report, rCfg);
+
+        report.resourcePackages = [
+          {
+            resourcePackage: {
+              disabled: false,
+              items: [{ name: copiedThemeName, path: `BaseThemes/${copiedThemeName}.json`, type: 202 }],
+              name: 'SharedResources',
+              type: 2
+            }
+          },
+          {
+            resourcePackage: {
+              disabled: false,
+              items: [{ name: copiedLogoFileName, path: copiedLogoFileName, type: 100 }],
+              name: 'RegisteredResources',
+              type: 1
+            }
+          }
+        ];
+      }
+
+      const decorativeVisuals = buildTemplateDecorativeVisuals(copiedLogoFileName).map((cfg, idx) => ({
+        config: JSON.stringify(cfg),
+        filters: '[]',
+        x: cfg.layouts[0].position.x,
+        y: cfg.layouts[0].position.y,
+        z: cfg.layouts[0].position.z + idx,
+        width: cfg.layouts[0].position.width,
+        height: cfg.layouts[0].position.height
+      }));
+
+      const subtitleVisual = buildVisualContainer({
+        name: 'v_subtitle_template',
+        x: 272,
+        y: 16,
+        z: 302,
+        width: pageWidth - 292,
+        height: 48,
+        singleVisual: {
+          visualType: 'textbox',
+          drillFilterOtherVisuals: true,
+          objects: {
+            general: [
+              {
+                properties: {
+                  paragraphs: [
+                    {
+                      textRuns: [
+                        {
+                          value: 'Dashboard con plantilla corporativa (canvas)',
+                          textStyle: { fontWeight: 'bold', fontSize: '18pt', color: '#094780' }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      });
+
+      const existingWithoutTemplate = (section.visualContainers || []).filter((v: any) => {
+        const n = getVisualNameFromConfig(v.config);
+        return !['v_sidebar_template', 'v_logo_template', 'v_title_template', 'v_subtitle_template'].includes(n || '');
+      });
+      section.visualContainers = decorativeVisuals.concat([subtitleVisual]).concat(existingWithoutTemplate);
+    }
 
     const existing = section.visualContainers || [];
     section.visualContainers = existing.concat([chart1, chart2, tableVisual]);
@@ -1344,7 +1600,8 @@ class PbipVisualMcpServer {
           detail: tableValueRefs.map((v) => v.queryRef)
         },
         visualsAdded: 3,
-        replaceExistingVisuals
+        replaceExistingVisuals,
+        applyTemplateStyle
       }
     };
   }
