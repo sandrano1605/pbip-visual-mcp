@@ -72,6 +72,33 @@ Parámetros nuevos de `pbip_create_professional_canvas`:
 4. Abrir el `.pbip` en Power BI Desktop y confirmar render.
 5. Registrar en bitácora de incidentes si aparece error (causa, fix, evidencia).
 
+## Flujo recomendado (operacion real, paso a paso)
+
+Cuando el reporte ya existe y se va a iterar sobre lienzos reales:
+
+1. Guardar el proyecto desde Power BI Desktop.
+2. Inspeccionar con MCP sin editar.
+3. Hacer un solo cambio pequeño.
+4. Crear backup del archivo afectado.
+5. Validar:
+   - `ConvertFrom-Json` del archivo,
+   - parse de todos los `visualContainers`.
+6. Abrir/revisar en Desktop.
+7. Si el usuario ajusta el layout manualmente y queda bien:
+   - mapear posiciones y tamaños,
+   - documentar ese layout como patrón.
+
+## Regla dura
+
+No mezclar en el mismo paso:
+
+- nuevo lienzo,
+- lógica DAX nueva,
+- tablas/columnas calculadas nuevas,
+- filtros complejos Top N.
+
+Primero se estabiliza el lienzo. Después se agregan filtros y lógica.
+
 ## Desarrollo
 
 ```bash

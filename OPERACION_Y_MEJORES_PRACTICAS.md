@@ -60,3 +60,67 @@ Cada cambio de MCP debe actualizar:
 2. `CONFIGURACION_CLAUDE.md` (ejemplos operativos reales).
 3. `MCP_INCIDENTES_Y_FIXES.md` (si hubo falla y correccion).
 4. `ACADEMIA_MICROSOFT_PBI_MEJORES_PRACTICAS.md` cuando se cambie estandar visual.
+
+## Flujo seguro validado en produccion
+
+Quedo validado este flujo para cambios visuales sobre `report.json`:
+
+1. Crear backup del archivo puntual.
+2. Hacer un solo cambio.
+3. Validar:
+   - JSON global,
+   - parse de cada `visualContainers[].config`.
+4. Abrir en Power BI Desktop.
+5. Si el usuario mueve visuales manualmente y el resultado es correcto:
+   - mapear coordenadas finales,
+   - usar ese layout como patrón documentado.
+
+## Regla para nuevos lienzos
+
+No crear en un mismo paso:
+
+- nuevo lienzo,
+- filtros complejos,
+- DAX nuevo,
+- tablas/columnas calculadas.
+
+Secuencia correcta:
+
+1. estructura del lienzo,
+2. apertura correcta,
+3. filtro Top N,
+4. refinamiento visual.
+
+## Diagnostico obligatorio de errores de lienzo
+
+Si Desktop muestra:
+
+- `deserializeCanvasItems`
+- `Cannot read properties of undefined (reading 'name')`
+
+hacer inmediatamente:
+
+1. parse de todos los `visualContainers`,
+2. ubicar el índice roto,
+3. corregir solo ese `config`,
+4. revalidar todos los visuales.
+
+## Patrón validado: lienzo tipo grafico + tabla
+
+Canvas:
+
+- `1600x1000`
+
+Distribucion:
+
+- sidebar: `0,0,280,1000`
+- contenido desde `x=300`
+- bloque grafico: `620.59` ancho
+- bloque tabla: `629.41` ancho
+- separación entre bloques: `29.41`
+
+Aplicar cuando el objetivo sea responder una pregunta comercial con:
+
+- 1 grafico principal,
+- 1 tabla operativa alta,
+- branding lateral.
