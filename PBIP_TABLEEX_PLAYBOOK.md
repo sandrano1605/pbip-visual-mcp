@@ -81,3 +81,55 @@ Serialized as:
 - `% disp.`
 - `Sem.`
 
+
+## Caso validado: dias de inventario promedio en salas
+
+Medida validada:
+
+- `Dias Inventario Sala Promedio SKU 12M`
+
+Formula validada:
+
+`AVERAGE ( ''master_disponibilidad_nl''[DIAS_INVENTARIO_SALA] )`
+
+Criterio de negocio:
+
+- promedio de dias de inventario en salas para el SKU,
+- calculado sobre la columna base ya existente del modelo,
+- util para tabla operativa Top 10 12M.
+
+Prueba DAX validada:
+
+- conexion Desktop viva,
+- `TOPN(2)` por `Ranking Venta 12M Global`,
+- tiempo observado despues de reapertura limpia: `12 ms`.
+
+Resultados observados:
+
+- `21000234` -> `48.41`
+- `80200408` -> `32.21`
+
+Aplicacion en `tableEx`:
+
+- `queryRef`: `MEDIDAS_MASTER_DISPONIBILIDAD.Dias Inventario Sala Promedio SKU 12M`
+- encabezado visible: `Días inv. prom.`
+
+Leccion operativa:
+
+- esta medida es suficientemente liviana para agregarla a la tabla,
+- se valido primero en DAX y despues en `report.json`,
+- el PBIP reabrio correctamente despues del cambio.
+
+## Regla de formato numerico
+
+Estandar validado para tablas operativas y visuales del reporte:
+
+- numeros de unidades, cantidades, rankings, centros, dias e indicadores: `#,0`
+- porcentaje: `0.00%` salvo que el usuario lo simplifique explicitamente
+- moneda: `[$-es-CL]$ #,0.00`
+
+Regla visual:
+
+- usar `0` decimales y separador de miles en numeros no monetarios,
+- usar simbolo `$` solo cuando el dato representa dinero,
+- no mezclar formato monetario con cantidades operativas.
