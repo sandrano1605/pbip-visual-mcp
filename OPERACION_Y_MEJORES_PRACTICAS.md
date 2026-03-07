@@ -124,3 +124,24 @@ Aplicar cuando el objetivo sea responder una pregunta comercial con:
 - 1 grafico principal,
 - 1 tabla operativa alta,
 - branding lateral.
+
+
+## Playbook operativo validado: `tableEx`
+
+Referencia principal:
+
+- `PBIP_TABLEEX_PLAYBOOK.md`
+
+Regla operativa para trabajo real:
+
+1. backup del archivo afectado,
+2. medida creada o actualizada,
+3. verificacion en sesion viva,
+4. verificacion en TMDL,
+5. prueba DAX pequena,
+6. agregar una sola columna a `tableEx`,
+7. validar `report.json`,
+8. reabrir Desktop,
+9. documentar.
+
+No saltarse la verificacion en TMDL. Esa fue la causa real de varias fallas de reapertura.

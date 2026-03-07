@@ -110,3 +110,21 @@ Documentación operativa extendida:
 - `CONFIGURACION_CLAUDE.md`
 - `OPERACION_Y_MEJORES_PRACTICAS.md`
 - `ACADEMIA_MICROSOFT_PBI_MEJORES_PRACTICAS.md`
+
+
+## TableEx Playbook
+
+Validated playbook for adding semantic-model measures to PBIP `tableEx` visuals:
+
+- `PBIP_TABLEEX_PLAYBOOK.md`
+
+This captures the safe production workflow:
+
+1. Create or update the measure.
+2. Verify it in the live Desktop session.
+3. Verify it in TMDL on disk.
+4. Run a small DAX test.
+5. Add one field to the `tableEx` visual.
+6. Validate `report.json`.
+7. Reopen Desktop.
+8. Document the result.
